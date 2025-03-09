@@ -16,37 +16,51 @@ const fs = require("fs");
 const app = express();
 const server = http.createServer(app);
 
+// Middleware to get the username before file upload
+const fetchUsername = async (req, res, next) => {
+    try {
+        const { mobileNumber } = req.body;
+        if (!mobileNumber) return res.status(400).json({ error: "Mobile number is required" });
+
+        const database = await db.connectDB();
+        const usersCollection = database.collection("users");
+
+        // Fetch user by mobileNumber
+        const user = await usersCollection.findOne({ mobile: mobileNumber });
+        if (!user) return res.status(404).json({ error: "User not found" });
+
+        req.username = user.name || "unknown_user"; // Attach username to request
+        next();
+    } catch (error) {
+        console.error("Error fetching username:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+};
+
 // Set up multer for file uploads
 const storage = multer.diskStorage({
     destination: async (req, file, cb) => {
-      const username = req.body.customer || "unknown_user"; // Use customer name as folder
-      const uploadPath = path.join(__dirname, "files", username);
-  
-      await fs.ensureDir(uploadPath); // Ensure directory exists
-      cb(null, uploadPath);
+        try {
+            const username = req.username || "unknown_user"; // Use the username from middleware
+            const uploadPath = path.join(__dirname, "files", username);
+
+            await fs.ensureDir(uploadPath); // Ensure directory exists
+            cb(null, uploadPath);
+        } catch (error) {
+            cb(error, null);
+        }
     },
     filename: (req, file, cb) => {
-      cb(null, Date.now() + "-" + file.originalname); // Unique filename
+        cb(null, Date.now() + "-" + file.originalname); // Unique filename
     },
-  });
-  
-  const upload = multer({ 
-    storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // Limit to 5MB (5 * 1024 * 1024 bytes)
-    fileFilter: (req, file, cb) => {
-      // Allowed file types (Optional)
-      const allowedTypes = ["image/jpeg", "image/png", "application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
-      
-      if (!allowedTypes.includes(file.mimetype)) {
-        return cb(new Error("Only JPG, PNG, PDF, and DOC files are allowed!"));
-      }
-      cb(null, true);
-    }
-  });
-  
-  
-  // Serve static files
-  app.use("/files", express.static(path.join(__dirname, "files")));
+});
+
+const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB limit
+
+
+// Serve static files
+app.use("/files", express.static(path.join(__dirname, "files")));
+
 
 
 // Constants
@@ -203,7 +217,7 @@ app.get("/user/:mobile", async (req, res) => {
 
         // Use projection to fetch only specific fields
         const user = await usersCollection.findOne(
-            { mobile: req.params.mobile }, 
+            { mobile: req.params.mobile },
             { projection: { name: 1, email: 1, company: 1, _id: 0 } } // Exclude _id
         );
 
@@ -218,93 +232,94 @@ app.get("/user/:mobile", async (req, res) => {
     }
 });
 
-app.post("/sales-visit", upload.single("file"), async (req, res) => {
+app.post("/sales-visit", fetchUsername, upload.single("file"), async (req, res) => {
     try {
-      const { customer, mobile, address, place, comments, latitude, longitude, mobileNumber } = req.body;
-      
-      if (!customer || !address || !place || !mobileNumber) {
-        return res.status(400).json({ error: "Required fields are missing" });
-      }
-  
-      const database = await db.connectDB();
-      const usersCollection = database.collection("users");
-  
-      // Find user by mobile number
-      const user = await usersCollection.findOne({ mobile: mobileNumber });
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
-      }
-  
-      // File URL (if uploaded)
-      const fileUrl = req.file ? `/files/${mobileNumber}/${req.file.filename}` : null;
-  
-      // Create visit entry
-      const visitEntry = {
-        customer,
-        mobile: mobile || null,
-        address,
-        place,
-        comments,
-        fileUrl, // Store file path in DB
-        latitude,
-        longitude,
-        date: new Date(),
-      };
-  
-      // Update user document by pushing sales visit entry
-      await usersCollection.updateOne(
-        { mobile: mobileNumber },
-        { $push: { salesVisits: visitEntry } }
-      );
-  
-      res.status(200).json({
-        message: "Sales visit information updated successfully",
-        fileUrl, // Return file URL
-      });
-    } catch (error) {
-      res.status(500).json({ error: "Internal Server Error" });
-    }
-  });
-  
+        const { customer, mobile, address, place, comments, latitude, longitude, mobileNumber } = req.body;
 
-  app.get("/get-visits", async (req, res) => {
-    try {
-      const { username, date } = req.query;
-  
-      if (!username || !date) {
-        return res.status(400).json({ error: "Username and date are required" });
-      }
-  
-      const database = await db.connectDB();
-      const usersCollection = database.collection("users");
-  
-      // Find user by username
-      const user = await usersCollection.findOne({ name: username });
-  
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
-      }
-  
-      // Convert date to start and end of the day
-      const startDate = new Date(date);
-      startDate.setHours(0, 0, 0, 0);
-  
-      const endDate = new Date(date);
-      endDate.setHours(23, 59, 59, 999);
-  
-      // Filter sales visits by date
-      const filteredVisits = (user.salesVisits || []).filter(visit => {
-        const visitDate = new Date(visit.date);
-        return visitDate >= startDate && visitDate <= endDate;
-      });
-  
-      res.status(200).json(filteredVisits);
+        if (!customer || !address || !place || !mobileNumber) {
+            return res.status(400).json({ error: "Required fields are missing" });
+        }
+
+        const database = await db.connectDB();
+        const usersCollection = database.collection("users");
+
+        // Find user by mobile number
+        const user = await usersCollection.findOne({ mobile: mobileNumber });
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // File URL (if uploaded)
+        const fileUrl = req.file ? `/files/${req.username}/${req.file.filename}` : null;
+
+        // Create visit entry
+        const visitEntry = {
+            customer,
+            mobile: mobile || null,
+            address,
+            place,
+            comments,
+            fileUrl, // Store file path in DB
+            latitude,
+            longitude,
+            date: new Date(),
+        };
+
+        // Update user document by pushing sales visit entry
+        await usersCollection.updateOne(
+            { mobile: mobileNumber },
+            { $push: { salesVisits: visitEntry } }
+        );
+
+        res.status(200).json({
+            message: "Sales visit information updated successfully",
+            fileUrl, // Return file URL
+        });
     } catch (error) {
-      console.error("Error fetching visits:", error);
-      res.status(500).json({ error: "Internal Server Error" });
+        console.error("Error:", error);
+        res.status(500).json({ error: "Internal Server Error" });
     }
-  });
-  
+});
+
+
+app.get("/get-visits", async (req, res) => {
+    try {
+        const { username, date } = req.query;
+
+        if (!username || !date) {
+            return res.status(400).json({ error: "Username and date are required" });
+        }
+
+        const database = await db.connectDB();
+        const usersCollection = database.collection("users");
+
+        // Find user by username
+        const user = await usersCollection.findOne({ name: username });
+
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // Convert date to start and end of the day
+        const startDate = new Date(date);
+        startDate.setHours(0, 0, 0, 0);
+
+        const endDate = new Date(date);
+        endDate.setHours(23, 59, 59, 999);
+
+        // Filter sales visits by date
+        const filteredVisits = (user.salesVisits || []).filter(visit => {
+            const visitDate = new Date(visit.date);
+            return visitDate >= startDate && visitDate <= endDate;
+        });
+
+        res.status(200).json(filteredVisits);
+    } catch (error) {
+        console.error("Error fetching visits:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
 
 
 // Create a password reset request
