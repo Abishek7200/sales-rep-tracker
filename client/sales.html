@@ -395,58 +395,69 @@
 
 
     async function submitVisit() {
-      const customer = document.getElementById("customer").value;
-      const mobile = document.getElementById("mobile").value || null;
-      const address = document.getElementById("address").value;
-      const place = document.getElementById("place").value;
-      const comments = document.getElementById("comments").value;
-      const file = document.getElementById("file")?.files[0] || null;
-      const visitModal = document.getElementById("visitModal");
+  const customer = document.getElementById("customer").value;
+  const mobile = document.getElementById("mobile").value || null;
+  const address = document.getElementById("address").value;
+  const place = document.getElementById("place").value;
+  const comments = document.getElementById("comments").value;
+  const file = document.getElementById("file")?.files[0] || null;
+  const visitModal = document.getElementById("visitModal");
 
-      if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          async function (position) {
-            const latitude = position.coords.latitude;
-            const longitude = position.coords.longitude;
+  if ("geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      async function (position) {
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
 
-            const visitData = {
-              customer,
-              mobile,
-              address,
-              place,
-              comments,
-              file: file ? file.name : null,
-              latitude,
-              longitude,
-              mobileNumber
-            };
+        const formData = new FormData();
+        formData.append("customer", customer);
+        formData.append("mobile", mobile);
+        formData.append("address", address);
+        formData.append("place", place);
+        formData.append("comments", comments);
+        formData.append("latitude", latitude);
+        formData.append("longitude", longitude);
+        formData.append("mobileNumber", mobileNumber);
+        if (file) {
+          formData.append("file", file);
+        }
 
-            console.log("Visit Data:", visitData); // Debugging output
+        console.log("Sending Visit Data:", formData);
 
-            // Send visit data to the backend
-            try {
-              const response = await fetch("/sales-visit", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(visitData),
-              });
+        try {
+          const response = await fetch("/sales-visit", {
+            method: "POST",
+            body: formData, // Sending FormData instead of JSON
+          });
 
-              const result = await response.json();
-              alert(result.message);
-              visitModal.classList.add("hidden");
-            } catch (error) {
-              console.error("Error submitting visit:", error);
-              alert("Failed to submit visit. Please try again.");
-            }
-          },
-          function (error) {
-            showLocationPopup(); // Show popup if location is denied
+          const result = await response.json();
+          alert(result.message);
+
+          // If the response includes a file URL, display the download link
+          if (result.fileUrl) {
+            const fileLink = document.createElement("a");
+            fileLink.href = result.fileUrl;
+            fileLink.innerText = "Download File";
+            fileLink.target = "_blank";
+            document.body.appendChild(fileLink);
           }
-        );
-      } else {
-        alert("Geolocation is not supported in this browser.");
+
+          visitModal.classList.add("hidden");
+          fetchVisits();
+        } catch (error) {
+          console.error("Error submitting visit:", error);
+          alert("Failed to submit visit. Please try again.");
+        }
+      },
+      function (error) {
+        alert("Location access denied. Please enable location services.");
       }
-    }
+    );
+  } else {
+    alert("Geolocation is not supported in this browser.");
+  }
+}
+
 
     // Show a popup if location is blocked
     function showLocationPopup() {

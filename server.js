@@ -10,9 +10,44 @@ const { deleteSong, getSongs } = require('./db');
 const path = require('path');
 const crypto = require('crypto');
 require('dotenv').config();
+const multer = require("multer");
+const fs = require("fs");
 
 const app = express();
 const server = http.createServer(app);
+
+// Set up multer for file uploads
+const storage = multer.diskStorage({
+    destination: async (req, file, cb) => {
+      const username = req.body.customer || "unknown_user"; // Use customer name as folder
+      const uploadPath = path.join(__dirname, "files", username);
+  
+      await fs.ensureDir(uploadPath); // Ensure directory exists
+      cb(null, uploadPath);
+    },
+    filename: (req, file, cb) => {
+      cb(null, Date.now() + "-" + file.originalname); // Unique filename
+    },
+  });
+  
+  const upload = multer({ 
+    storage: storage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // Limit to 5MB (5 * 1024 * 1024 bytes)
+    fileFilter: (req, file, cb) => {
+      // Allowed file types (Optional)
+      const allowedTypes = ["image/jpeg", "image/png", "application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+      
+      if (!allowedTypes.includes(file.mimetype)) {
+        return cb(new Error("Only JPG, PNG, PDF, and DOC files are allowed!"));
+      }
+      cb(null, true);
+    }
+  });
+  
+  
+  // Serve static files
+  app.use("/files", express.static(path.join(__dirname, "files")));
+
 
 // Constants
 const TOKEN_EXPIRATION = '30d'; // 30 days
@@ -183,11 +218,10 @@ app.get("/user/:mobile", async (req, res) => {
     }
 });
 
-// POST: Store Sales Visit Data
-app.post("/sales-visit", async (req, res) => {
+app.post("/sales-visit", upload.single("file"), async (req, res) => {
     try {
-      const { customer, mobile, address, place, comments, file, latitude, longitude, mobileNumber } = req.body;
-  
+      const { customer, mobile, address, place, comments, latitude, longitude, mobileNumber } = req.body;
+      
       if (!customer || !address || !place || !mobileNumber) {
         return res.status(400).json({ error: "Required fields are missing" });
       }
@@ -197,34 +231,41 @@ app.post("/sales-visit", async (req, res) => {
   
       // Find user by mobile number
       const user = await usersCollection.findOne({ mobile: mobileNumber });
-  
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
   
+      // File URL (if uploaded)
+      const fileUrl = req.file ? `/files/${mobileNumber}/${req.file.filename}` : null;
+  
+      // Create visit entry
       const visitEntry = {
         customer,
         mobile: mobile || null,
         address,
         place,
         comments,
-        file,
+        fileUrl, // Store file path in DB
         latitude,
         longitude,
-        date: new Date(), // Add current timestamp
+        date: new Date(),
       };
   
-      // Update user details by pushing new visit entry into `salesVisits` array
+      // Update user document by pushing sales visit entry
       await usersCollection.updateOne(
         { mobile: mobileNumber },
         { $push: { salesVisits: visitEntry } }
       );
   
-      res.status(200).json({ message: "Sales visit information updated successfully" });
+      res.status(200).json({
+        message: "Sales visit information updated successfully",
+        fileUrl, // Return file URL
+      });
     } catch (error) {
       res.status(500).json({ error: "Internal Server Error" });
     }
   });
+  
 
   app.get("/get-visits", async (req, res) => {
     try {
