@@ -16,6 +16,9 @@ const fs = require("fs");
 const app = express();
 const server = http.createServer(app);
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // Required for form data
+
 // Middleware to get the username before file upload
 const fetchUsername = async (req, res, next) => {
     try {
@@ -39,19 +42,22 @@ const fetchUsername = async (req, res, next) => {
 
 // Set up multer for file uploads
 const storage = multer.diskStorage({
-    destination: async (req, file, cb) => {
+    destination: (req, file, cb) => {
         try {
-            const username = req.username || "unknown_user"; // Use the username from middleware
+            const username = req.username || "unknown_user";
             const uploadPath = path.join(__dirname, "files", username);
 
-            await fs.ensureDir(uploadPath); // Ensure directory exists
+            if (!fs.existsSync(uploadPath)) {
+                fs.mkdirSync(uploadPath, { recursive: true });
+            }
+
             cb(null, uploadPath);
         } catch (error) {
             cb(error, null);
         }
     },
     filename: (req, file, cb) => {
-        cb(null, Date.now() + "-" + file.originalname); // Unique filename
+        cb(null, Date.now() + "-" + file.originalname);
     },
 });
 
@@ -232,7 +238,7 @@ app.get("/user/:mobile", async (req, res) => {
     }
 });
 
-app.post("/sales-visit", fetchUsername, upload.single("file"), async (req, res) => {
+app.post("/sales-visit", upload.single("file"), fetchUsername, async (req, res) => {
     try {
         const { customer, mobile, address, place, comments, latitude, longitude, mobileNumber } = req.body;
 
