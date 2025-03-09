@@ -431,7 +431,7 @@
           });
 
           const result = await response.json();
-          alert(result.message);
+          await alert(result.message);
 
           // If the response includes a file URL, display the download link
           if (result.fileUrl) {
@@ -442,8 +442,8 @@
             document.body.appendChild(fileLink);
           }
 
-          visitModal.classList.add("hidden");
-          fetchVisits();
+          await visitModal.classList.add("hidden");
+          await fetchVisits();
         } catch (error) {
           console.error("Error submitting visit:", error);
           alert("Failed to submit visit. Please try again.");
