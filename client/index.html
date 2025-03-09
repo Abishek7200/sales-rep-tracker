@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | WFJ Presenter</title>
+    <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+    <div id="notification" class="notification hidden"></div>
+    <div class="form-container">
+        <h1>Login</h1>
+        <form id="loginForm">
+            <input type="tel" id="mobileNumber" placeholder="Mobile Number" required pattern="[0-9]{10}">
+            <div style="position: relative; display: flex; align-items: center;">
+                <input type="password" id="password" placeholder="Password" required style="width: 100%; padding-right: 35px;">
+                <span id="togglePassword" style="
+                    position: absolute; 
+                    right: 10px; 
+                    cursor: pointer;
+                    color: gray;
+                    font-size: 18px;">
+                    👁️
+                </span>
+            </div>
+            <button type="submit">Login</button>
+            <div class="extra-links">
+                <a href="#" class="link" style="color: white;" onclick="showForgotPassword()">Forgot Password?</a>
+            </div>
+        </form>
+        <p class="signup-text">Don't have an account? <a href="/signup">Sign up</a></p>
+    </div>
+
+    <!-- Forgot Password Popup -->
+    <div class="popup-overlay" id="forgotPasswordPopup">
+        <div class="popup">
+            <h3 style="color: darkslateblue;">Reset Password</h3>
+            <p style="color: darkblue;">Enter your mobile number to receive a reset link</p>
+            <input type="tel" id="resetMobile" placeholder="Enter your mobile number" required pattern="[0-9]{10}">
+            <button onclick="sendResetLink()" style="color: white;">Send Reset Link</button>
+            <button class="close-btn" onclick="closePopup()" style="color: white;">Close</button>
+        </div>
+    </div>
+
+    <script>
+
+function showNotification(message, success) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.backgroundColor = success ? '#28a745' : '#dc3545';
+            notification.style.display = 'block';
+
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 4000);
+        }
+        
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const mobileNumber = document.getElementById('mobileNumber').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mobileNumber, password }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showNotification('Login successful!', true);
+                    localStorage.setItem('mobileNumber', mobileNumber);
+                    localStorage.setItem('authToken', data.token);
+                    window.location.href = `/sales`;
+                } else {
+                    showNotification(data.error || 'Login failed', false);
+                }
+            } catch (error) {
+                console.error('Error during login:', error);
+                showNotification('An error occurred. Please try again.');
+            }
+        });
+
+        function showForgotPassword() {
+            document.getElementById('forgotPasswordPopup').style.display = 'flex';
+        }
+
+        function closePopup() {
+            document.getElementById('forgotPasswordPopup').style.display = 'none';
+        }
+
+        async function sendResetLink() {
+            const mobileNumber = document.getElementById('resetMobile').value;
+            if (!mobileNumber) {
+                showNotification('Please enter your mobile number.', false);
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/forgot-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mobileNumber }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showNotification('Reset link sent to your mobile number!');
+                    closePopup();
+                } else {
+                    showNotification(data.error || 'Failed to send reset link', false);
+                }
+            } catch (error) {
+                showNotification('An error occurred. Please try again.', false);
+            }
+        }
+
+        document.getElementById("togglePassword").addEventListener("click", function () {
+            const passwordField = document.getElementById("password");
+            if (passwordField.type === "password") {
+                passwordField.type = "text";
+                this.textContent = "🙈";
+            } else {
+                passwordField.type = "password";
+                this.textContent = "👁️";
+            }
+        });
+    </script>
+</body>
+</html>

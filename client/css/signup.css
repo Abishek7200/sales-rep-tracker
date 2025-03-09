@@ -1,0 +1,144 @@
+/* Import Google Font */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(to right, #c611cb, #2575fc);
+  padding: 20px;
+  color: #fff;
+}
+
+/* Signup Container */
+.signup-container {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2rem;
+  border-radius: 10px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Heading */
+.signup-container h2 {
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  font-size: 14px;
+  margin-bottom: 15px;
+  opacity: 0.8;
+}
+
+/* Input Fields */
+.signup-container input {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 16px;
+  outline: none;
+  transition: 0.3s ease-in-out;
+}
+
+.signup-container input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.signup-container input:focus {
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.4);
+}
+
+/* Sign Up Button */
+.signup-container button {
+  width: 100%;
+  padding: 12px;
+  background: #ff6b6b;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s ease-in-out;
+  margin-top: 10px;
+}
+
+.signup-container button:hover {
+  background: #ff4757;
+  transform: scale(1.05);
+}
+
+/* Login Link */
+.signup-container p {
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.signup-container a {
+  color: #ffb142;
+  text-decoration: none;
+  font-weight: 600;
+  transition: 0.3s ease-in-out;
+}
+
+.signup-container a:hover {
+  color: #ffdd59;
+  text-decoration: underline;
+}
+
+/* Notification */
+.notification {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #28a745;
+  padding: 10px 20px;
+  border-radius: 5px;
+  display: none;
+  color: #fff;
+  font-weight: bold;
+}
+
+.notification.visible {
+  display: block;
+}
+
+/* Responsive Design */
+@media only screen and (max-width: 450px) {
+  .signup-container {
+    width: 90%;
+    padding: 1.5rem;
+  }
+
+  .signup-container h2 {
+    font-size: 22px;
+  }
+
+  .signup-container input {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .signup-container button {
+    font-size: 16px;
+    padding: 10px;
+  }
+}

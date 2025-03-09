@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signup | WFJ Presenter</title>
+    <style>
+        /* General reset */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #8a2be2, #6a11cb);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* Glassmorphism Container */
+        .form-container {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 2.5rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* Title */
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+
+        /* Input Fields */
+        input {
+            width: 100%;
+            padding: 0.9rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            outline: none;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            transition: 0.3s ease-in-out;
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        input:focus {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Form Layout */
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        /* Button */
+        button {
+            width: 100%;
+            padding: 0.9rem;
+            background: linear-gradient(45deg, #ff7eb3, #ff758c);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+        }
+
+        button:hover {
+            background: linear-gradient(45deg, #ff4e76, #ff6384);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 118, 136, 0.4);
+        }
+
+        /* Link */
+        .link {
+            display: inline-block;
+            margin-top: 1rem;
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: 0.3s ease-in-out;
+        }
+
+        .link:hover {
+            color: #ff85a2;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 500px) {
+            .form-container {
+                padding: 2rem;
+            }
+
+            h2 {
+                font-size: 1.7rem;
+            }
+
+            button {
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="form-container">
+        <h2>Create an account</h2>
+        <form id="signupForm">
+            <input type="text" id="name" placeholder="Full Name" required>
+            <input type="text" id="mobile" placeholder="Mobile Number" required>
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="text" id="company" placeholder="Company Name" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button type="submit" style="margin-bottom: 20px;">Sign Up</button>
+        </form>
+        <a href="/welcome" class="link">Already have an account?</a>
+    </div>
+
+    <script>
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            let name = document.getElementById('name').value.trim();
+            let email = document.getElementById('email').value.trim();
+            let mobile = document.getElementById('mobile').value.trim();
+            let company = document.getElementById('company').value.trim();
+            let password = document.getElementById('password').value.trim();
+
+            // Mobile number validation (must be 9 to 10 digits)
+            if (!/^[0-9]{9,10}$/.test(mobile)) {
+                alert('Mobile number must be between 9 and 10 digits.');
+                return;
+            }
+
+            if (!name || !email || !mobile || !company || !password) {
+                alert('Fields cannot be empty or contain only spaces.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, mobile, company, password }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('Signup successful! You can now login.');
+                    window.location.href = '/welcome';
+                } else if (response.status === 400) {
+                    alert(data.error || 'Username or Email already exists. Try a different one.');
+                } else {
+                    alert(data.error || 'Signup failed. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error during signup:', error);
+                alert('An error occurred during signup.');
+            }
+        });
+    </script>
+</body>
+
+</html>

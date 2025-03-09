@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Dashboard</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #0048ff, #00d4ff);
+      background-size: 300% 300%;
+      animation: gradientAnimation 8s infinite alternate;
+      color: white;
+      text-align: center;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+    }
+  
+    @keyframes gradientAnimation {
+      0% { background-position: left top; }
+      100% { background-position: right bottom; }
+    }
+  
+    .dashboard-container {
+      max-width: 500px;
+      width: 90%;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      transition: transform 0.3s, box-shadow 0.3s;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+  
+    .dashboard-container:hover {
+      transform: scale(1.02);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+    }
+  
+    h1, h2, h3 {
+      margin-bottom: 15px;
+      font-weight: 600;
+      text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+  
+    input, textarea {
+  width: -webkit-fill-available;
+  padding: 14px;
+  margin: 10px 0;
+  border-radius: 10px;
+  border: none;
+  font-size: 16px;
+  transition: all 0.3s ease-in-out;
+  background: rgba(255, 255, 255, 0.1); /* Semi-transparent white background */
+  color: white; /* White text for inputs */
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(5px);
+}
+
+input::placeholder, textarea::placeholder {
+  color: rgba(255, 255, 255, 0.7); /* Lighter placeholder text */
+}
+
+input:focus, textarea:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.2); /* Slightly brighter on focus */
+  border: 1px solid white;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+  
+    button {
+      background: linear-gradient(135deg, #ff9800, #ff5e00);
+      color: white;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: bold;
+      transition: all 0.3s;
+      box-shadow: 0 5px 15px rgba(255, 152, 0, 0.4);
+      border-radius: 25px;
+      padding: 10px;
+    }
+  
+    button:hover {
+      background: linear-gradient(135deg, #e68900, #e04e00);
+      transform: scale(1.05);
+      box-shadow: 0 7px 20px rgba(255, 152, 0, 0.6);
+    }
+  
+    #visitList {
+      list-style: none;
+      padding: 0;
+      margin-top: 15px;
+    }
+  
+    #visitList li {
+      background: rgba(255, 255, 255, 0.2);
+      margin: 8px 0;
+      padding: 15px;
+      border-radius: 10px;
+      transition: transform 0.3s, box-shadow 0.3s;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+  
+    #visitList li:hover {
+      transform: scale(1.03);
+      box-shadow: 0 5px 20px rgba(255, 255, 255, 0.3);
+    }
+  
+    .modal.hidden {
+      display: none;
+    }
+  
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      animation: fadeIn 0.3s ease-in-out;
+      backdrop-filter: blur(10px);
+    }
+  
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  
+    .modal-content {
+  background: rgba(30, 30, 30, 0.95); /* Darker background for better contrast */
+  padding: 25px;
+  border-radius: 12px;
+  width: 420px;
+  position: relative;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  transform: translateY(-10px);
+  animation: slideIn 0.3s ease-in-out;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white; /* Ensure text inside the modal is white */
+}
+  
+    @keyframes slideIn {
+      from { transform: translateY(-20px); }
+      to { transform: translateY(0); }
+    }
+  
+    .close-btn {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      font-size: 24px;
+      cursor: pointer;
+      color: #ffffff;
+      transition: color 0.3s;
+    }
+  
+    .close-btn:hover {
+      color: #ff5e00;
+    }
+  
+    /* Additional Styling for Camera View */
+    #cameraView, #photoCanvas {
+      width: 100%;
+      border-radius: 10px;
+      margin: 10px 0;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+  
+    #captureBtn {
+      margin-top: 10px;
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
+    }
+  
+    #captureBtn:hover {
+      background: linear-gradient(135deg, #00a8ff, #005bb5);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    #welcomeMessage{
+      margin-bottom: 60px;
+    }
+
+    #quote{
+      margin: 22px;
+    width: 70%;
+    justify-self: center;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="dashboard-container">
+    <h1 id="welcomeMessage"></h1>
+    <h1 id="date"></h1>
+    <p id="quote"></p>
+
+    <button id="addEntryBtn">Add Entry</button>
+
+    <div id="visitModal" class="modal hidden">
+      <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h2>Sales Visit Form</h2>
+        <input type="text" id="customer" placeholder="Customer Name" required>
+        <input type="text" id="mobile" placeholder="Mobile Number (Optional)">
+        <input type="text" id="address" placeholder="Address" required>
+        <input type="text" id="place" placeholder="Place" required>
+        <textarea id="comments" placeholder="Comments"></textarea>
+        <input type="file" id="file" accept="image/*,.pdf,.doc,.docx">
+        <button id="captureBtn">Take Picture</button>
+        <video id="cameraView" class="hidden" autoplay></video>
+        <canvas id="photoCanvas" class="hidden"></canvas>
+        <button onclick="submitVisit()">Submit</button>
+      </div>
+    </div>
+
+    <h3>Today's Submitted Visits</h3>
+    <ul id="visitList"></ul>
+  </div>
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    const mobileNumber = localStorage.getItem("mobileNumber");
+    if (!mobileNumber) {
+      console.error("No mobile number found in localStorage.");
+      return;
+    }
+
+    document.getElementById("date").innerText = new Date().toDateString();
+    document.getElementById("quote").innerText = await fetchQuote();
+
+    // Fetch user details using mobile number
+    const response = await fetch(`/user/${mobileNumber}`);
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch user details");
+    }
+
+    const userData = await response.json();
+    document.getElementById("welcomeMessage").innerText = `Welcome, ${userData.name}!`;
+  } catch (error) {
+    console.error("Error:", error.message);
+  }
+});
+
+
+    async function fetchQuote() {
+      const quotes = [
+        "Success is not the key to happiness. Happiness is the key to success.",
+        "Every day is a new opportunity to reach your goals.",
+        "Hard work beats talent when talent doesn't work hard.",
+      ];
+      return quotes[new Date().getDate() % quotes.length];
+    }
+
+    document.getElementById('addEntryBtn').addEventListener('click', () => {
+    document.getElementById('visitModal').classList.remove('hidden');
+});
+
+// Close modal when clicking the close button
+document.querySelector('.close-btn').addEventListener('click', () => {
+    document.getElementById('visitModal').classList.add('hidden');
+});
+
+// Close modal when clicking outside of the modal content
+document.getElementById('visitModal').addEventListener('click', (event) => {
+    if (event.target === document.getElementById('visitModal')) {
+        document.getElementById('visitModal').classList.add('hidden');
+    }
+});
+
+
+    async function submitVisit() {
+      if (!navigator.geolocation) {
+        return alert("Geolocation is not supported by your browser.");
+      }
+
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        try {
+          const latitude = position.coords.latitude;
+          const longitude = position.coords.longitude;
+
+          const customer = document.getElementById("customer").value.trim();
+          const mobile = document.getElementById("mobile").value.trim();
+          const address = document.getElementById("address").value.trim();
+          const place = document.getElementById("place").value.trim();
+          const comments = document.getElementById("comments").value.trim();
+          const fileInput = document.getElementById("file");
+
+          if (!customer || !address || !place) {
+            return alert("Please fill in all required fields.");
+          }
+
+          if (fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            if (file.size > 10 * 1024 * 1024) {
+              return alert("File size should not exceed 10MB");
+            }
+          }
+
+          const formData = new FormData();
+          formData.append("customer", customer);
+          formData.append("mobile", mobile);
+          formData.append("address", address);
+          formData.append("place", place);
+          formData.append("comments", comments);
+          formData.append("latitude", latitude);
+          formData.append("longitude", longitude);
+          if (fileInput.files.length > 0) {
+            formData.append("file", fileInput.files[0]);
+          }
+
+          const response = await fetch("/submit-visit", {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${localStorage.getItem("authToken")}` },
+            body: formData
+          });
+
+          if (response.ok) {
+            alert("Visit submitted successfully");
+            fetchVisits();
+            resetForm();
+          } else {
+            alert("Failed to submit visit");
+          }
+        } catch (error) {
+          console.error("Error submitting visit:", error);
+          alert("An error occurred. Please try again.");
+        }
+      });
+    }
+
+    async function fetchVisits() {
+      try {
+        const response = await fetch("/get-todays-visits", {
+          headers: { "Authorization": `Bearer ${localStorage.getItem("authToken")}` }
+        });
+        const visits = await response.json();
+        const visitList = document.getElementById("visitList");
+        visitList.innerHTML = "";
+
+        visits.forEach((visit) => {
+          const li = document.createElement("li");
+          li.textContent = `${visit.customer} - ${visit.place} (${visit.time})`;
+          li.style.opacity = 0;
+          visitList.appendChild(li);
+
+          setTimeout(() => { li.style.opacity = 1; }, 200);
+        });
+      } catch (error) {
+        console.error("Error fetching visits:", error);
+      }
+    }
+
+    function resetForm() {
+      document.getElementById("customer").value = "";
+      document.getElementById("mobile").value = "";
+      document.getElementById("address").value = "";
+      document.getElementById("place").value = "";
+      document.getElementById("comments").value = "";
+      document.getElementById("file").value = "";
+    }
+
+  </script>
+</body>
+
+</html>
