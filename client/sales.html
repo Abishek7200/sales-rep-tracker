@@ -333,6 +333,10 @@ function getISTDate() {
     return `${year}-${month}-${day}`; // Format: YYYY-MM-DD
 }
 
+const dateInput = document.getElementById("visitDate");
+        const todayIST = getISTDate(); // Get today's date in IST
+        dateInput.value = todayIST; // Set default date
+
     document.addEventListener("DOMContentLoaded", async () => {
       try {
         mobileNumber = localStorage.getItem("mobileNumber");
@@ -354,10 +358,7 @@ function getISTDate() {
 
         document.getElementById("welcomeMessage").innerText = `Welcome, ${username}!`;
 
-        const dateInput = document.getElementById("visitDate");
-        const todayIST = getISTDate(); // Get today's date in IST
-        dateInput.value = todayIST; // Set default date
-
+        
         await fetchVisits(todayIST); // Fetch visits for the current date on page load
       } catch (error) {
         console.error("Error:", error.message);
@@ -396,18 +397,21 @@ function getISTDate() {
     document.getElementById('addEntryBtn').addEventListener('click', () => {
       document.getElementById('visitModal').classList.remove('hidden');
       // document.body.style.overflow = 'hidden';
+      document.getElementById('visitDate').style.display = 'none'
     });
 
     // Close modal when clicking the close button
     document.querySelector('.close-btn').addEventListener('click', () => {
       document.getElementById('visitModal').classList.add('hidden');
       document.body.style.overflow = 'auto';
+      document.getElementById('visitDate').style.display = 'block'
     });
 
     // Close modal when clicking outside of the modal content
     document.getElementById('visitModal').addEventListener('click', (event) => {
       if (event.target === document.getElementById('visitModal')) {
         document.getElementById('visitModal').classList.add('hidden');
+        
       }
     });
 
@@ -457,11 +461,11 @@ function getISTDate() {
             fileLink.href = result.fileUrl;
             fileLink.innerText = "Download File";
             fileLink.target = "_blank";
-            document.getElementsByClassName('visit-card').appendChild(fileLink);
+            // document.getElementsByClassName('visit-card').appendChild(fileLink);
           }
 
           await visitModal.classList.add("hidden");
-          await fetchVisits();
+          await fetchVisits(todayIST);
         } catch (error) {
           console.error("Error submitting visit:", error);
           alert("Failed to submit visit. Please try again.");
