@@ -4,8 +4,8 @@ const { MongoClient } = require('mongodb');
 // MongoDB URI and client setup
 const uri = process.env.MONGO_URI;
 const client = new MongoClient(uri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
+    // useNewUrlParser: true,
+    // useUnifiedTopology: true,
 });
 
 const databaseName = 'sales-tracker'; // Database name

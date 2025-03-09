@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
   <title>Sales Dashboard</title>
   <style>
     body {
@@ -17,16 +18,21 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
       margin: 0;
-      overflow: hidden;
+      /* overflow: hidden; */
+      overflow-y: auto;
     }
-  
+
     @keyframes gradientAnimation {
-      0% { background-position: left top; }
-      100% { background-position: right bottom; }
+      0% {
+        background-position: left top;
+      }
+
+      100% {
+        background-position: right bottom;
+      }
     }
-  
+
     .dashboard-container {
       max-width: 500px;
       width: 90%;
@@ -39,43 +45,52 @@
       transition: transform 0.3s, box-shadow 0.3s;
       border: 1px solid rgba(255, 255, 255, 0.2);
     }
-  
+
     .dashboard-container:hover {
       transform: scale(1.02);
       box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
     }
-  
-    h1, h2, h3 {
+
+    h1,
+    h2,
+    h3 {
       margin-bottom: 15px;
       font-weight: 600;
       text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     }
-  
-    input, textarea {
-  width: -webkit-fill-available;
-  padding: 14px;
-  margin: 10px 0;
-  border-radius: 10px;
-  border: none;
-  font-size: 16px;
-  transition: all 0.3s ease-in-out;
-  background: rgba(255, 255, 255, 0.1); /* Semi-transparent white background */
-  color: white; /* White text for inputs */
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(5px);
-}
 
-input::placeholder, textarea::placeholder {
-  color: rgba(255, 255, 255, 0.7); /* Lighter placeholder text */
-}
+    input,
+    textarea {
+      width: -webkit-fill-available;
+      padding: 14px;
+      margin: 10px 0;
+      border-radius: 10px;
+      border: none;
+      font-size: 16px;
+      transition: all 0.3s ease-in-out;
+      background: rgba(255, 255, 255, 0.1);
+      /* Semi-transparent white background */
+      color: white;
+      /* White text for inputs */
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(5px);
+    }
 
-input:focus, textarea:focus {
-  outline: none;
-  background: rgba(255, 255, 255, 0.2); /* Slightly brighter on focus */
-  border: 1px solid white;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-}
-  
+    input::placeholder,
+    textarea::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+      /* Lighter placeholder text */
+    }
+
+    input:focus,
+    textarea:focus {
+      outline: none;
+      background: rgba(255, 255, 255, 0.2);
+      /* Slightly brighter on focus */
+      border: 1px solid white;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+    }
+
     button {
       background: linear-gradient(135deg, #ff9800, #ff5e00);
       color: white;
@@ -86,41 +101,21 @@ input:focus, textarea:focus {
       box-shadow: 0 5px 15px rgba(255, 152, 0, 0.4);
       border-radius: 25px;
       padding: 10px;
+      width: 45%;
     }
-  
+
     button:hover {
       background: linear-gradient(135deg, #e68900, #e04e00);
       transform: scale(1.05);
       box-shadow: 0 7px 20px rgba(255, 152, 0, 0.6);
     }
-  
-    #visitList {
-      list-style: none;
-      padding: 0;
-      margin-top: 15px;
-    }
-  
-    #visitList li {
-      background: rgba(255, 255, 255, 0.2);
-      margin: 8px 0;
-      padding: 15px;
-      border-radius: 10px;
-      transition: transform 0.3s, box-shadow 0.3s;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-  
-    #visitList li:hover {
-      transform: scale(1.03);
-      box-shadow: 0 5px 20px rgba(255, 255, 255, 0.3);
-    }
-  
+
     .modal.hidden {
       display: none;
     }
-  
+
     .modal {
-      position: fixed;
+      position: absolute;
       top: 0;
       left: 0;
       width: 100%;
@@ -132,58 +127,70 @@ input:focus, textarea:focus {
       animation: fadeIn 0.3s ease-in-out;
       backdrop-filter: blur(10px);
     }
-  
+
     @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
     }
-  
+
     .modal-content {
-  background: rgba(30, 30, 30, 0.95); /* Darker background for better contrast */
-  padding: 25px;
-  border-radius: 12px;
-  width: 420px;
-  position: relative;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  transform: translateY(-10px);
-  animation: slideIn 0.3s ease-in-out;
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white; /* Ensure text inside the modal is white */
-}
-  
-    @keyframes slideIn {
-      from { transform: translateY(-20px); }
-      to { transform: translateY(0); }
+      background: rgba(30, 30, 30, 0.95);
+      /* Darker background for better contrast */
+      padding: 25px;
+      border-radius: 12px;
+      position: relative;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      transform: translateY(-10px);
+      animation: slideIn 0.3s ease-in-out;
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      /* Ensure text inside the modal is white */
     }
-  
+
+    @keyframes slideIn {
+      from {
+        transform: translateY(-20px);
+      }
+
+      to {
+        transform: translateY(0);
+      }
+    }
+
     .close-btn {
       position: absolute;
       top: 12px;
       right: 16px;
-      font-size: 24px;
+      font-size: xx-large;
       cursor: pointer;
       color: #ffffff;
       transition: color 0.3s;
     }
-  
+
     .close-btn:hover {
       color: #ff5e00;
     }
-  
+
     /* Additional Styling for Camera View */
-    #cameraView, #photoCanvas {
+    #cameraView,
+    #photoCanvas {
       width: 100%;
       border-radius: 10px;
       margin: 10px 0;
       border: 1px solid rgba(255, 255, 255, 0.3);
     }
-  
+
     #captureBtn {
       margin-top: 10px;
       background: linear-gradient(135deg, #00c6ff, #0072ff);
     }
-  
+
     #captureBtn:hover {
       background: linear-gradient(135deg, #00a8ff, #005bb5);
     }
@@ -192,25 +199,99 @@ input:focus, textarea:focus {
       display: none;
     }
 
-    #welcomeMessage{
-      margin-bottom: 60px;
+    #welcomeMessage {
+      margin-bottom: 40px;
     }
 
-    #quote{
+    #quote {
       margin: 22px;
-    width: 70%;
-    justify-self: center;
+      width: 70%;
+      justify-self: center;
+      font-style: oblique;
     }
+
+    #logoutBtn {
+      border: none;
+      background: #3e3e3edb;
+      width: max-content;
+      padding: 10px;
+      margin-top: 10%;
+    }
+
+    .visit-card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      padding: 16px;
+      margin: 12px 0;
+      border-left: 5px solid #007bff;
+      /* Highlight */
+      transition: transform 0.2s ease-in-out, opacity 0.3s ease-in-out;
+      width: -webkit-fill-available;
+    }
+
+    .visit-card:hover {
+      transform: translateY(-4px);
+      /* Hover effect */
+    }
+
+    .visit-card h3 {
+      margin: 0;
+      color: #007bff;
+      font-size: 20px;
+    }
+
+    .visit-card p {
+      margin: 6px 0;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .visit-card strong {
+      color: #333;
+    }
+
+    #visitList {
+      display: flex;
+      flex-wrap: wrap;
+      /* gap: 16px; */
+      justify-content: center;
+      /* Center align cards */
+    }
+
+    .location-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #ff4949;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  z-index: 1000;
+  text-align: center;
+}
+
+.popup-content button {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  margin-top: 10px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
   </style>
 </head>
 
 <body>
   <div class="dashboard-container">
     <h1 id="welcomeMessage"></h1>
-    <h1 id="date"></h1>
+    <h2 id="date"></h2>
     <p id="quote"></p>
 
-    <button id="addEntryBtn">Add Entry</button>
+    <button id="addEntryBtn">Add Visit</button>
 
     <div id="visitModal" class="modal hidden">
       <div class="modal-content">
@@ -229,143 +310,218 @@ input:focus, textarea:focus {
       </div>
     </div>
 
-    <h3>Today's Submitted Visits</h3>
-    <ul id="visitList"></ul>
+    <h3 style="margin-top: 40px;">Today's Submitted Visits</h3>
+    <div id="visitList"></div>
+    <button id="logoutBtn"><i class="fas fa-sign-out"></i> Logout</button>
   </div>
   <script>
+
+    let mobileNumber;
+    let username = ""; // Global variable to store the username
+
     document.addEventListener("DOMContentLoaded", async () => {
-  try {
-    const mobileNumber = localStorage.getItem("mobileNumber");
-    if (!mobileNumber) {
-      console.error("No mobile number found in localStorage.");
-      return;
-    }
+      try {
+        mobileNumber = localStorage.getItem("mobileNumber");
+        const authToken = localStorage.getItem("authToken");
+        if (!mobileNumber || !authToken) {
+          window.location.href = "/welcome"; // Redirect to the welcome page
+          return;
+        }
 
-    document.getElementById("date").innerText = new Date().toDateString();
-    document.getElementById("quote").innerText = await fetchQuote();
+        document.getElementById("date").innerText = new Date().toDateString();
+        document.getElementById("quote").innerText = await fetchQuote();
 
-    // Fetch user details using mobile number
-    const response = await fetch(`/user/${mobileNumber}`);
+        // Fetch user details once
+        const response = await fetch(`/user/${mobileNumber}`);
+        if (!response.ok) throw new Error("Failed to fetch user details");
 
-    if (!response.ok) {
-      throw new Error("Failed to fetch user details");
-    }
+        const userData = await response.json();
+        username = userData.name; // Store name in a global variable
 
-    const userData = await response.json();
-    document.getElementById("welcomeMessage").innerText = `Welcome, ${userData.name}!`;
-  } catch (error) {
-    console.error("Error:", error.message);
-  }
-});
+        document.getElementById("welcomeMessage").innerText = `Welcome, ${username}!`;
+
+        // Call fetchVisits() after setting the username
+        await fetchVisits();
+      } catch (error) {
+        console.error("Error:", error.message);
+      }
+    });
+
+
+    document.getElementById("logoutBtn").addEventListener("click", function () {
+      localStorage.clear(); // Clear all local storage data
+      window.location.href = "/welcome"; // Redirect to the welcome page
+    });
+
 
 
     async function fetchQuote() {
       const quotes = [
-        "Success is not the key to happiness. Happiness is the key to success.",
-        "Every day is a new opportunity to reach your goals.",
-        "Hard work beats talent when talent doesn't work hard.",
+        `"The only way to do great work is to love what you do." – Steve Jobs`,
+        `"Success is not final, failure is not fatal: it is the courage to continue that counts." – Winston Churchill`,
+        `"Your time is limited, so don’t waste it living someone else’s life." – Steve Jobs`,
+        `"Believe you can and you're halfway there." – Theodore Roosevelt`,
+        `"Do what you can, with what you have, where you are." – Theodore Roosevelt`,
+        `"Opportunities don't happen. You create them." – Chris Grosser`,
+        `"The best way to predict the future is to create it." – Peter Drucker`,
+        `"Don't watch the clock; do what it does. Keep going." – Sam Levenson`,
+        `"The harder you work for something, the greater you'll feel when you achieve it." – Unknown`,
+        `"Difficulties in life are intended to make us better, not bitter." – Dan Reeves`,
+        `"The secret of getting ahead is getting started." – Mark Twain`,
+        `"It does not matter how slowly you go as long as you do not stop." – Confucius`,
+        `"Failure is simply the opportunity to begin again, this time more intelligently." – Henry Ford`,
+        `"Dream big and dare to fail." – Norman Vaughan`,
+        `"Act as if what you do makes a difference. It does." – William James`
       ];
       return quotes[new Date().getDate() % quotes.length];
     }
 
     document.getElementById('addEntryBtn').addEventListener('click', () => {
-    document.getElementById('visitModal').classList.remove('hidden');
-});
+      document.getElementById('visitModal').classList.remove('hidden');
+      // document.body.style.overflow = 'hidden';
+    });
 
-// Close modal when clicking the close button
-document.querySelector('.close-btn').addEventListener('click', () => {
-    document.getElementById('visitModal').classList.add('hidden');
-});
+    // Close modal when clicking the close button
+    document.querySelector('.close-btn').addEventListener('click', () => {
+      document.getElementById('visitModal').classList.add('hidden');
+      document.body.style.overflow = 'auto';
+    });
 
-// Close modal when clicking outside of the modal content
-document.getElementById('visitModal').addEventListener('click', (event) => {
-    if (event.target === document.getElementById('visitModal')) {
+    // Close modal when clicking outside of the modal content
+    document.getElementById('visitModal').addEventListener('click', (event) => {
+      if (event.target === document.getElementById('visitModal')) {
         document.getElementById('visitModal').classList.add('hidden');
-    }
-});
+      }
+    });
 
 
     async function submitVisit() {
-      if (!navigator.geolocation) {
-        return alert("Geolocation is not supported by your browser.");
-      }
+  const customer = document.getElementById("customer").value;
+  const mobile = document.getElementById("mobile").value || null;
+  const address = document.getElementById("address").value;
+  const place = document.getElementById("place").value;
+  const comments = document.getElementById("comments").value;
+  const file = document.getElementById("file")?.files[0] || null;
+  const visitModal = document.getElementById("visitModal");
 
-      navigator.geolocation.getCurrentPosition(async (position) => {
+  if ("geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      async function (position) {
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
+
+        const visitData = {
+          customer,
+          mobile,
+          address,
+          place,
+          comments,
+          file: file ? file.name : null,
+          latitude,
+          longitude,
+        };
+
+        console.log("Visit Data:", visitData); // Debugging output
+
+        // Send visit data to the backend
         try {
-          const latitude = position.coords.latitude;
-          const longitude = position.coords.longitude;
-
-          const customer = document.getElementById("customer").value.trim();
-          const mobile = document.getElementById("mobile").value.trim();
-          const address = document.getElementById("address").value.trim();
-          const place = document.getElementById("place").value.trim();
-          const comments = document.getElementById("comments").value.trim();
-          const fileInput = document.getElementById("file");
-
-          if (!customer || !address || !place) {
-            return alert("Please fill in all required fields.");
-          }
-
-          if (fileInput.files.length > 0) {
-            const file = fileInput.files[0];
-            if (file.size > 10 * 1024 * 1024) {
-              return alert("File size should not exceed 10MB");
-            }
-          }
-
-          const formData = new FormData();
-          formData.append("customer", customer);
-          formData.append("mobile", mobile);
-          formData.append("address", address);
-          formData.append("place", place);
-          formData.append("comments", comments);
-          formData.append("latitude", latitude);
-          formData.append("longitude", longitude);
-          if (fileInput.files.length > 0) {
-            formData.append("file", fileInput.files[0]);
-          }
-
-          const response = await fetch("/submit-visit", {
+          const response = await fetch("/sales-visit", {
             method: "POST",
-            headers: { "Authorization": `Bearer ${localStorage.getItem("authToken")}` },
-            body: formData
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(visitData),
           });
 
-          if (response.ok) {
-            alert("Visit submitted successfully");
-            fetchVisits();
-            resetForm();
-          } else {
-            alert("Failed to submit visit");
-          }
+          const result = await response.json();
+          alert(result.message);
+          visitModal.classList.add("hidden");
         } catch (error) {
           console.error("Error submitting visit:", error);
-          alert("An error occurred. Please try again.");
+          alert("Failed to submit visit. Please try again.");
         }
-      });
-    }
+      },
+      function (error) {
+        showLocationPopup(); // Show popup if location is denied
+      }
+    );
+  } else {
+    alert("Geolocation is not supported in this browser.");
+  }
+}
+
+// Show a popup if location is blocked
+function showLocationPopup() {
+  const popup = document.createElement("div");
+  popup.className = "location-popup";
+  popup.innerHTML = `
+    <div class="popup-content">
+      <h3>Enable Location Services</h3>
+      <p>To continue, enable location access in your browser settings.</p>
+      <ul>
+        <li><strong>Chrome:</strong> Click the 🔒 icon in the address bar → "Site settings" → Set "Location" to "Allow".</li>
+        <li><strong>Safari:</strong> Go to Settings → Privacy → Location Services → Enable for Safari.</li>
+        <li><strong>Android:</strong> Go to Settings → Location → Enable.</li>
+      </ul>
+      <button onclick="retryLocation()">Retry</button>
+    </div>
+  `;
+
+  document.body.appendChild(popup);
+}
+
+// Retry getting location
+function retryLocation() {
+  document.querySelector(".location-popup")?.remove();
+  submitVisit(); // Retry the process
+}
+
 
     async function fetchVisits() {
       try {
-        const response = await fetch("/get-todays-visits", {
+        if (!username) {
+          console.error("Username is not set");
+          return;
+        }
+
+        const today = new Date().toISOString().split("T")[0]; // Format: YYYY-MM-DD
+
+        const visitResponse = await fetch(`/get-visits?username=${username}&date=${today}`, {
           headers: { "Authorization": `Bearer ${localStorage.getItem("authToken")}` }
         });
-        const visits = await response.json();
+
+        const visits = await visitResponse.json();
         const visitList = document.getElementById("visitList");
-        visitList.innerHTML = "";
+        visitList.innerHTML = ""; // Clear previous data
 
         visits.forEach((visit) => {
-          const li = document.createElement("li");
-          li.textContent = `${visit.customer} - ${visit.place} (${visit.time})`;
-          li.style.opacity = 0;
-          visitList.appendChild(li);
+          const visitDate = new Date(visit.date);
+          const formattedDate = `${visitDate.getDate()}/${visitDate.toLocaleString('en-US', { month: 'short' })}/${visitDate.getFullYear()}`;
+          const formattedTime = visitDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
 
-          setTimeout(() => { li.style.opacity = 1; }, 200);
+          const mapLink = `https://www.google.com/maps?q=${visit.latitude},${visit.longitude}`;
+
+          const card = document.createElement("div");
+          card.className = "visit-card";
+          card.innerHTML = `
+        <h3 style="text-shadow: none;">${visit.customer}</h3>
+        <p><strong>Mobile:</strong> ${visit.mobile || "N/A"}</p>
+        <p><strong>Address:</strong> ${visit.address}</p>
+        <p><strong>Place:</strong> ${visit.place}</p>
+        <p><strong>Comments:</strong> ${visit.comments || "No comments"}</p>
+        <p><strong>Date:</strong> ${formattedDate}, ${formattedTime}</p>
+        <p><strong>Location:</strong> <a href="${mapLink}" target="_blank" style="color: blue; text-decoration: underline;">View on Map</a></p>
+      `;
+
+          card.style.opacity = 0;
+          visitList.appendChild(card);
+
+          // Add fade-in effect
+          setTimeout(() => { card.style.opacity = 1; }, 200);
         });
       } catch (error) {
         console.error("Error fetching visits:", error);
       }
     }
+
 
     function resetForm() {
       document.getElementById("customer").value = "";

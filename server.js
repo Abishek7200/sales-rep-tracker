@@ -183,6 +183,85 @@ app.get("/user/:mobile", async (req, res) => {
     }
 });
 
+// POST: Store Sales Visit Data
+app.post("/sales-visit", async (req, res) => {
+    try {
+      const { customer, mobile, address, place, comments, mobileNumber } = req.body;
+  
+      if (!customer || !address || !place || !mobileNumber) {
+        return res.status(400).json({ error: "Required fields are missing" });
+      }
+  
+      const database = await db.connectDB();
+      const usersCollection = database.collection("users");
+  
+      // Find user by mobile number
+      const user = await usersCollection.findOne({ mobile: mobileNumber });
+  
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+  
+      const visitEntry = {
+        customer,
+        mobile: mobile || null,
+        address,
+        place,
+        comments,
+        date: new Date(), // Add current timestamp
+      };
+  
+      // Update user details by pushing new visit entry into `salesVisits` array
+      await usersCollection.updateOne(
+        { mobile: mobileNumber },
+        { $push: { salesVisits: visitEntry } }
+      );
+  
+      res.status(200).json({ message: "Sales visit information updated successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  });
+
+  app.get("/get-visits", async (req, res) => {
+    try {
+      const { username, date } = req.query;
+  
+      if (!username || !date) {
+        return res.status(400).json({ error: "Username and date are required" });
+      }
+  
+      const database = await db.connectDB();
+      const usersCollection = database.collection("users");
+  
+      // Find user by username
+      const user = await usersCollection.findOne({ name: username });
+  
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+  
+      // Convert date to start and end of the day
+      const startDate = new Date(date);
+      startDate.setHours(0, 0, 0, 0);
+  
+      const endDate = new Date(date);
+      endDate.setHours(23, 59, 59, 999);
+  
+      // Filter sales visits by date
+      const filteredVisits = (user.salesVisits || []).filter(visit => {
+        const visitDate = new Date(visit.date);
+        return visitDate >= startDate && visitDate <= endDate;
+      });
+  
+      res.status(200).json(filteredVisits);
+    } catch (error) {
+      console.error("Error fetching visits:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  });
+  
+
 
 // Create a password reset request
 app.post("/forgot-password", async (req, res) => {
