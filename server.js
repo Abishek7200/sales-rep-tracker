@@ -13,9 +13,11 @@ require('dotenv').config();
 const multer = require("multer");
 const fs = require("fs");
 
+
 const app = express();
 const server = http.createServer(app);
 
+app.use("/files", express.static(path.join(__dirname, "files")));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // Required for form data
 
@@ -62,11 +64,6 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB limit
-
-
-// Serve static files
-app.use("/files", express.static(path.join(__dirname, "files")));
-
 
 
 // Constants
@@ -283,6 +280,27 @@ app.post("/sales-visit", upload.single("file"), fetchUsername, async (req, res) 
         });
     } catch (error) {
         console.error("Error:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+app.get("/download/:username/:filename", async (req, res) => {
+    try {
+        const { username, filename } = req.params;
+        const filePath = path.join(__dirname, "files", username, filename);
+
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ error: "File not found" });
+        }
+
+        res.download(filePath, filename, (err) => {
+            if (err) {
+                console.error("Error downloading file:", err);
+                res.status(500).json({ error: "Error downloading file" });
+            }
+        });
+    } catch (error) {
+        console.error("Download error:", error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 });

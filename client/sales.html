@@ -310,6 +310,7 @@
     </div>
 
     <h3 style="margin-top: 40px;">Today's Submitted Visits</h3>
+    <input type="date" id="visitDate" onchange="fetchVisits(this.value)">
     <div id="visitList"></div>
     <button id="logoutBtn"><i class="fas fa-sign-out"></i> Logout</button>
   </div>
@@ -317,6 +318,20 @@
 
     let mobileNumber;
     let username = ""; // Global variable to store the username
+
+    // Function to get current date in IST
+function getISTDate() {
+    const now = new Date();
+
+    // Convert UTC time to IST (UTC+5:30)
+    now.setMinutes(now.getMinutes() + now.getTimezoneOffset() + 330);
+
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0'); // Month is 0-based
+    const day = String(now.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`; // Format: YYYY-MM-DD
+}
 
     document.addEventListener("DOMContentLoaded", async () => {
       try {
@@ -339,8 +354,11 @@
 
         document.getElementById("welcomeMessage").innerText = `Welcome, ${username}!`;
 
-        // Call fetchVisits() after setting the username
-        await fetchVisits();
+        const dateInput = document.getElementById("visitDate");
+        const todayIST = getISTDate(); // Get today's date in IST
+        dateInput.value = todayIST; // Set default date
+
+        await fetchVisits(todayIST); // Fetch visits for the current date on page load
       } catch (error) {
         console.error("Error:", error.message);
       }
@@ -439,7 +457,7 @@
             fileLink.href = result.fileUrl;
             fileLink.innerText = "Download File";
             fileLink.target = "_blank";
-            document.body.appendChild(fileLink);
+            document.getElementsByClassName('visit-card').appendChild(fileLink);
           }
 
           await visitModal.classList.add("hidden");
@@ -456,6 +474,27 @@
   } else {
     alert("Geolocation is not supported in this browser.");
   }
+}
+
+
+async function downloadFile(username, filename) {
+    try {
+        const response = await fetch(`/download/${username}/${filename}`);
+
+        if (!response.ok) throw new Error("Failed to download file");
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    } catch (error) {
+        console.error("Error downloading file:", error);
+        alert("Failed to download file.");
+    }
 }
 
 
@@ -486,33 +525,37 @@
     }
 
 
-    async function fetchVisits() {
-      try {
-        if (!username) {
-          console.error("Username is not set");
-          return;
-        }
+    async function fetchVisits(selectedDate = null) {
+  try {
+    if (!username) {
+      console.error("Username is not set");
+      return;
+    }
 
-        const today = new Date().toISOString().split("T")[0]; // Format: YYYY-MM-DD
+    const date = selectedDate || new Date().toISOString().split("T")[0]; // Default to today's date
 
-        const visitResponse = await fetch(`/get-visits?username=${username}&date=${today}`, {
-          headers: { "Authorization": `Bearer ${localStorage.getItem("authToken")}` }
-        });
+    const visitResponse = await fetch(`/get-visits?username=${username}&date=${date}`, {
+      headers: { "Authorization": `Bearer ${localStorage.getItem("authToken")}` }
+    });
 
-        const visits = await visitResponse.json();
-        const visitList = document.getElementById("visitList");
-        visitList.innerHTML = ""; // Clear previous data
+    const visits = await visitResponse.json();
+    const visitList = document.getElementById("visitList");
+    visitList.innerHTML = ""; // Clear previous data
 
-        visits.forEach((visit) => {
-          const visitDate = new Date(visit.date);
-          const formattedDate = `${visitDate.getDate()}/${visitDate.toLocaleString('en-US', { month: 'short' })}/${visitDate.getFullYear()}`;
-          const formattedTime = visitDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
+    visits.forEach((visit) => {
+      const visitDate = new Date(visit.date);
+      const formattedDate = `${visitDate.getDate()}/${visitDate.toLocaleString('en-US', { month: 'short' })}/${visitDate.getFullYear()}`;
+      const formattedTime = visitDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
 
-          const mapLink = `https://www.google.com/maps?q=${visit.latitude},${visit.longitude}`;
+      const mapLink = `https://www.google.com/maps?q=${visit.latitude},${visit.longitude}`;
+      
+      const downloadButton = visit.filename
+        ? `<button onclick="downloadFile('${username}', '${visit.filename}')" style="background-color: blue; color: white; padding: 5px 10px; border: none; cursor: pointer; border-radius: 5px;">Download File</button>`
+        : `<p style="color: red;">No file available</p>`;
 
-          const card = document.createElement("div");
-          card.className = "visit-card";
-          card.innerHTML = `
+      const card = document.createElement("div");
+      card.className = "visit-card";
+      card.innerHTML = `
         <h3 style="text-shadow: none;">${visit.customer}</h3>
         <p><strong>Mobile:</strong> ${visit.mobile || "N/A"}</p>
         <p><strong>Address:</strong> ${visit.address}</p>
@@ -520,18 +563,19 @@
         <p><strong>Comments:</strong> ${visit.comments || "No comments"}</p>
         <p><strong>Date:</strong> ${formattedDate}, ${formattedTime}</p>
         <p><strong>Location:</strong> <a href="${mapLink}" target="_blank" style="color: blue; text-decoration: underline;">View on Map</a></p>
+        ${downloadButton}
       `;
 
-          card.style.opacity = 0;
-          visitList.appendChild(card);
+      card.style.opacity = 0;
+      visitList.appendChild(card);
 
-          // Add fade-in effect
-          setTimeout(() => { card.style.opacity = 1; }, 200);
-        });
-      } catch (error) {
-        console.error("Error fetching visits:", error);
-      }
-    }
+      setTimeout(() => { card.style.opacity = 1; }, 200);
+    });
+  } catch (error) {
+    console.error("Error fetching visits:", error);
+  }
+}
+
 
 
     function resetForm() {
