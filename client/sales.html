@@ -260,28 +260,27 @@
     }
 
     .location-popup {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: #ff4949;
-  padding: 20px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
-  z-index: 1000;
-  text-align: center;
-}
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #ff4949;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      z-index: 1000;
+      text-align: center;
+    }
 
-.popup-content button {
-  background: #007bff;
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  margin-top: 10px;
-  cursor: pointer;
-  border-radius: 5px;
-}
-
+    .popup-content button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      margin-top: 10px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
   </style>
 </head>
 
@@ -396,63 +395,64 @@
 
 
     async function submitVisit() {
-  const customer = document.getElementById("customer").value;
-  const mobile = document.getElementById("mobile").value || null;
-  const address = document.getElementById("address").value;
-  const place = document.getElementById("place").value;
-  const comments = document.getElementById("comments").value;
-  const file = document.getElementById("file")?.files[0] || null;
-  const visitModal = document.getElementById("visitModal");
+      const customer = document.getElementById("customer").value;
+      const mobile = document.getElementById("mobile").value || null;
+      const address = document.getElementById("address").value;
+      const place = document.getElementById("place").value;
+      const comments = document.getElementById("comments").value;
+      const file = document.getElementById("file")?.files[0] || null;
+      const visitModal = document.getElementById("visitModal");
 
-  if ("geolocation" in navigator) {
-    navigator.geolocation.getCurrentPosition(
-      async function (position) {
-        const latitude = position.coords.latitude;
-        const longitude = position.coords.longitude;
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          async function (position) {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
 
-        const visitData = {
-          customer,
-          mobile,
-          address,
-          place,
-          comments,
-          file: file ? file.name : null,
-          latitude,
-          longitude,
-        };
+            const visitData = {
+              customer,
+              mobile,
+              address,
+              place,
+              comments,
+              file: file ? file.name : null,
+              latitude,
+              longitude,
+              mobileNumber
+            };
 
-        console.log("Visit Data:", visitData); // Debugging output
+            console.log("Visit Data:", visitData); // Debugging output
 
-        // Send visit data to the backend
-        try {
-          const response = await fetch("/sales-visit", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(visitData),
-          });
+            // Send visit data to the backend
+            try {
+              const response = await fetch("/sales-visit", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(visitData),
+              });
 
-          const result = await response.json();
-          alert(result.message);
-          visitModal.classList.add("hidden");
-        } catch (error) {
-          console.error("Error submitting visit:", error);
-          alert("Failed to submit visit. Please try again.");
-        }
-      },
-      function (error) {
-        showLocationPopup(); // Show popup if location is denied
+              const result = await response.json();
+              alert(result.message);
+              visitModal.classList.add("hidden");
+            } catch (error) {
+              console.error("Error submitting visit:", error);
+              alert("Failed to submit visit. Please try again.");
+            }
+          },
+          function (error) {
+            showLocationPopup(); // Show popup if location is denied
+          }
+        );
+      } else {
+        alert("Geolocation is not supported in this browser.");
       }
-    );
-  } else {
-    alert("Geolocation is not supported in this browser.");
-  }
-}
+    }
 
-// Show a popup if location is blocked
-function showLocationPopup() {
-  const popup = document.createElement("div");
-  popup.className = "location-popup";
-  popup.innerHTML = `
+    // Show a popup if location is blocked
+    function showLocationPopup() {
+      const popup = document.createElement("div");
+      popup.className = "location-popup";
+      popup.innerHTML = `
     <div class="popup-content">
       <h3>Enable Location Services</h3>
       <p>To continue, enable location access in your browser settings.</p>
@@ -465,14 +465,14 @@ function showLocationPopup() {
     </div>
   `;
 
-  document.body.appendChild(popup);
-}
+      document.body.appendChild(popup);
+    }
 
-// Retry getting location
-function retryLocation() {
-  document.querySelector(".location-popup")?.remove();
-  submitVisit(); // Retry the process
-}
+    // Retry getting location
+    function retryLocation() {
+      document.querySelector(".location-popup")?.remove();
+      submitVisit(); // Retry the process
+    }
 
 
     async function fetchVisits() {

@@ -186,7 +186,7 @@ app.get("/user/:mobile", async (req, res) => {
 // POST: Store Sales Visit Data
 app.post("/sales-visit", async (req, res) => {
     try {
-      const { customer, mobile, address, place, comments, mobileNumber } = req.body;
+      const { customer, mobile, address, place, comments, file, latitude, longitude, mobileNumber } = req.body;
   
       if (!customer || !address || !place || !mobileNumber) {
         return res.status(400).json({ error: "Required fields are missing" });
@@ -208,6 +208,9 @@ app.post("/sales-visit", async (req, res) => {
         address,
         place,
         comments,
+        file,
+        latitude,
+        longitude,
         date: new Date(), // Add current timestamp
       };
   
