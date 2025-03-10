@@ -284,26 +284,23 @@ app.post("/sales-visit", upload.single("file"), fetchUsername, async (req, res) 
     }
 });
 
-app.get("/download/:username/:filename", async (req, res) => {
-    try {
-        const { username, filename } = req.params;
-        const filePath = path.join(__dirname, "files", username, filename);
-
-        if (!fs.existsSync(filePath)) {
-            return res.status(404).json({ error: "File not found" });
-        }
-
-        res.download(filePath, filename, (err) => {
-            if (err) {
-                console.error("Error downloading file:", err);
-                res.status(500).json({ error: "Error downloading file" });
-            }
-        });
-    } catch (error) {
-        console.error("Download error:", error);
-        res.status(500).json({ error: "Internal Server Error" });
+// Route to handle file downloads based on fileUrl
+app.get("/download", (req, res) => {
+    const fileUrl = req.query.fileUrl; // Example: "/files/Abishekkumar/filename.jpg"
+    
+    if (!fileUrl) {
+      return res.status(400).json({ error: "Missing fileUrl parameter" });
     }
-});
+  
+    // Resolve full path
+    const filePath = path.join(__dirname, fileUrl);
+  
+    res.download(filePath, (err) => {
+      if (err) {
+        return res.status(404).json({ error: "File not found" });
+      }
+    });
+  });
 
 
 app.get("/get-visits", async (req, res) => {

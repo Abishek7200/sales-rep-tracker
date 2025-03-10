@@ -14,7 +14,7 @@
       animation: gradientAnimation 8s infinite alternate;
       color: white;
       text-align: center;
-      /* padding: 20px; */
+      padding: 0px;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -44,11 +44,6 @@
       text-align: center;
       transition: transform 0.3s, box-shadow 0.3s;
       border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .dashboard-container:hover {
-      transform: scale(1.02);
-      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
     }
 
     h1,
@@ -101,7 +96,7 @@
       box-shadow: 0 5px 15px rgba(255, 152, 0, 0.4);
       border-radius: 25px;
       padding: 10px;
-      width: 45%;
+      width: 150px;
     }
 
     button:hover {
@@ -227,7 +222,6 @@
       display: flex;
       flex-direction: column;
       transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-      max-width: 400px;
       width: -webkit-fill-available;
     }
 
@@ -252,7 +246,7 @@
     }
 
     .visit-card p {
-      margin: 4px 0;
+      margin: 2px 0;
       font-size: 14px;
       /* display: flex; */
       align-items: center;
@@ -372,8 +366,9 @@
 
 <body>
   <div class="dashboard-container">
+    <div class="logo"><img src="./assets/logo.png" alt="Logo" style="width: 180px;"></div>
     <h1 id="welcomeMessage"></h1>
-    <h2 id="date"></h2>
+    <h3 id="date"></h3>
     <p id="quote"></p>
 
     <button id="addEntryBtn">Add Visit</button>
@@ -427,6 +422,31 @@
     const todayIST = getISTDate(); // Get today's date in IST
     dateInput.value = todayIST; // Set default date
 
+    function updateDateTime() {
+      const now = new Date();
+
+      // Convert to IST (Indian Standard Time) - UTC +5:30
+      const options = {
+        timeZone: "Asia/Kolkata",
+        hour12: true,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+      };
+
+      const istTime = now.toLocaleTimeString("en-US", options);
+      document.getElementById("date").innerText = `📅 ${istTime}`;
+    }
+
+    // Update every second
+    setInterval(updateDateTime, 1000);
+
+    // Initial call to avoid delay
+    updateDateTime();
+
     document.addEventListener("DOMContentLoaded", async () => {
       try {
         mobileNumber = localStorage.getItem("mobileNumber");
@@ -436,7 +456,7 @@
           return;
         }
 
-        document.getElementById("date").innerText = new Date().toDateString();
+        // document.getElementById("date").innerText = new Date().toDateString();
         document.getElementById("quote").innerText = await fetchQuote();
 
         // Fetch user details once
@@ -597,9 +617,11 @@
     }
 
     function downloadFile(fileUrl) {
-  fetch(fileUrl)
+  fetch(`/download?fileUrl=${encodeURIComponent(fileUrl)}`)
     .then(response => {
-      if (!response.ok) throw new Error("File not found");
+      if (!response.ok) {
+        throw new Error("File not found");
+      }
       return response.blob();
     })
     .then(blob => {
@@ -611,8 +633,12 @@
       document.body.removeChild(link);
       URL.revokeObjectURL(link.href);
     })
-    .catch(error => console.error("Download failed:", error));
+    .catch(error => {
+      console.error("Download failed:", error);
+      alert("File not found. Please check the file and try again.");
+    });
 }
+
 
 
     async function fetchVisits(selectedDate = null) {
@@ -640,12 +666,12 @@
           const mapLink = `https://www.google.com/maps?q=${visit.latitude},${visit.longitude}`;
 
           const attachment = visit.fileUrl
-  ? `<p><strong>📎 Attachments:</strong> 
+            ? `<p><strong>📎 Attachments:</strong> 
        <a href="javascript:void(0)" onclick="downloadFile('${visit.fileUrl}')">
          ${visit.fileUrl.split('/').pop()}
        </a>
      </p>`
-  : `<p><strong>📎 Attachments:</strong> <span style="color: red;">No file available</span></p>`;
+            : `<p><strong>📎 Attachments:</strong> <span style="color: red;">No file available</span></p>`;
 
           const card = document.createElement("div");
           card.className = "visit-card";
