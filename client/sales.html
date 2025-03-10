@@ -14,7 +14,7 @@
       animation: gradientAnimation 8s infinite alternate;
       color: white;
       text-align: center;
-      padding: 20px;
+      /* padding: 20px; */
       display: flex;
       justify-content: center;
       align-items: center;
@@ -115,7 +115,7 @@
     }
 
     .modal {
-      position: absolute;
+      position: sticky;
       top: 0;
       left: 0;
       width: 100%;
@@ -219,37 +219,87 @@
     }
 
     .visit-card {
-      background: #fff;
-      border-radius: 8px;
+      background: #ffffff;
+      border-radius: 12px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       padding: 16px;
       margin: 12px 0;
-      border-left: 5px solid #007bff;
-      /* Highlight */
-      transition: transform 0.2s ease-in-out, opacity 0.3s ease-in-out;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+      max-width: 400px;
       width: -webkit-fill-available;
     }
 
     .visit-card:hover {
-      transform: translateY(-4px);
-      /* Hover effect */
+      transform: translateY(-5px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
     }
 
     .visit-card h3 {
       margin: 0;
-      color: #007bff;
+      color: #333;
       font-size: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .visit-card h3::before {
+      content: "👤";
+      font-size: 22px;
     }
 
     .visit-card p {
-      margin: 6px 0;
+      margin: 4px 0;
       font-size: 14px;
+      /* display: flex; */
+      align-items: center;
+      gap: 8px;
+      color: #040497;
+      text-align: left;
+    }
+
+    .visit-card p strong {
       color: #555;
     }
 
-    .visit-card strong {
-      color: #333;
+    .visit-card a {
+      color: #007bff;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: bold;
     }
+
+    .visit-card a:hover {
+      text-decoration: underline;
+    }
+
+    .visit-card .download-btn {
+      background-color: #007bff;
+      color: white;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+    }
+
+    .visit-card .download-btn:hover {
+      background-color: #0056b3;
+    }
+
+    .no-file {
+      color: red;
+      font-size: 14px;
+    }
+
 
     #visitList {
       display: flex;
@@ -281,6 +331,42 @@
       cursor: pointer;
       border-radius: 5px;
     }
+
+    .loading-overlay {
+      display: none;
+      /* Hidden by default */
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+    }
+
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(255, 255, 255, 0.3);
+      border-top: 5px solid #ffffff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
   </style>
 </head>
 
@@ -305,6 +391,10 @@
         <button id="captureBtn">Take Picture</button>
         <video id="cameraView" class="hidden" autoplay></video>
         <canvas id="photoCanvas" class="hidden"></canvas>
+        <div id="loadingScreen" class="loading-overlay">
+          <div class="loading-spinner"></div>
+          <p>Fetching location...</p>
+        </div>
         <button onclick="submitVisit()">Submit</button>
       </div>
     </div>
@@ -320,22 +410,22 @@
     let username = ""; // Global variable to store the username
 
     // Function to get current date in IST
-function getISTDate() {
-    const now = new Date();
+    function getISTDate() {
+      const now = new Date();
 
-    // Convert UTC time to IST (UTC+5:30)
-    now.setMinutes(now.getMinutes() + now.getTimezoneOffset() + 330);
+      // Convert UTC time to IST (UTC+5:30)
+      now.setMinutes(now.getMinutes() + now.getTimezoneOffset() + 330);
 
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0'); // Month is 0-based
-    const day = String(now.getDate()).padStart(2, '0');
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0'); // Month is 0-based
+      const day = String(now.getDate()).padStart(2, '0');
 
-    return `${year}-${month}-${day}`; // Format: YYYY-MM-DD
-}
+      return `${year}-${month}-${day}`; // Format: YYYY-MM-DD
+    }
 
-const dateInput = document.getElementById("visitDate");
-        const todayIST = getISTDate(); // Get today's date in IST
-        dateInput.value = todayIST; // Set default date
+    const dateInput = document.getElementById("visitDate");
+    const todayIST = getISTDate(); // Get today's date in IST
+    dateInput.value = todayIST; // Set default date
 
     document.addEventListener("DOMContentLoaded", async () => {
       try {
@@ -358,7 +448,7 @@ const dateInput = document.getElementById("visitDate");
 
         document.getElementById("welcomeMessage").innerText = `Welcome, ${username}!`;
 
-        
+
         await fetchVisits(todayIST); // Fetch visits for the current date on page load
       } catch (error) {
         console.error("Error:", error.message);
@@ -396,7 +486,7 @@ const dateInput = document.getElementById("visitDate");
 
     document.getElementById('addEntryBtn').addEventListener('click', () => {
       document.getElementById('visitModal').classList.remove('hidden');
-      // document.body.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
       document.getElementById('visitDate').style.display = 'none'
     });
 
@@ -411,95 +501,73 @@ const dateInput = document.getElementById("visitDate");
     document.getElementById('visitModal').addEventListener('click', (event) => {
       if (event.target === document.getElementById('visitModal')) {
         document.getElementById('visitModal').classList.add('hidden');
-        
+
       }
     });
 
 
     async function submitVisit() {
-  const customer = document.getElementById("customer").value;
-  const mobile = document.getElementById("mobile").value || null;
-  const address = document.getElementById("address").value;
-  const place = document.getElementById("place").value;
-  const comments = document.getElementById("comments").value;
-  const file = document.getElementById("file")?.files[0] || null;
-  const visitModal = document.getElementById("visitModal");
+      const customer = document.getElementById("customer").value;
+      const mobile = document.getElementById("mobile").value || null;
+      const address = document.getElementById("address").value;
+      const place = document.getElementById("place").value;
+      const comments = document.getElementById("comments").value;
+      const file = document.getElementById("file")?.files[0] || null;
+      const visitModal = document.getElementById("visitModal");
+      const loadingScreen = document.getElementById("loadingScreen"); // Loading div
 
-  if ("geolocation" in navigator) {
-    navigator.geolocation.getCurrentPosition(
-      async function (position) {
-        const latitude = position.coords.latitude;
-        const longitude = position.coords.longitude;
+      if ("geolocation" in navigator) {
+        // Show loading screen while fetching location
+        loadingScreen.style.display = "flex";
 
-        const formData = new FormData();
-        formData.append("customer", customer);
-        formData.append("mobile", mobile);
-        formData.append("address", address);
-        formData.append("place", place);
-        formData.append("comments", comments);
-        formData.append("latitude", latitude);
-        formData.append("longitude", longitude);
-        formData.append("mobileNumber", mobileNumber);
-        if (file) {
-          formData.append("file", file);
-        }
+        navigator.geolocation.getCurrentPosition(
+          async function (position) {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
 
-        console.log("Sending Visit Data:", formData);
+            const formData = new FormData();
+            formData.append("customer", customer);
+            formData.append("mobile", mobile);
+            formData.append("address", address);
+            formData.append("place", place);
+            formData.append("comments", comments);
+            formData.append("latitude", latitude);
+            formData.append("longitude", longitude);
+            formData.append("mobileNumber", mobileNumber);
+            if (file) {
+              formData.append("file", file);
+            }
 
-        try {
-          const response = await fetch("/sales-visit", {
-            method: "POST",
-            body: formData, // Sending FormData instead of JSON
-          });
+            console.log("Sending Visit Data:", formData);
 
-          const result = await response.json();
-          await alert(result.message);
+            try {
+              const response = await fetch("/sales-visit", {
+                method: "POST",
+                body: formData,
+              });
 
-          // If the response includes a file URL, display the download link
-          if (result.fileUrl) {
-            const fileLink = document.createElement("a");
-            fileLink.href = result.fileUrl;
-            fileLink.innerText = "Download File";
-            fileLink.target = "_blank";
-            // document.getElementsByClassName('visit-card').appendChild(fileLink);
+              const result = await response.json();
+              alert(result.message);
+
+              await visitModal.classList.add("hidden");
+              await fetchVisits(todayIST);
+            } catch (error) {
+              console.error("Error submitting visit:", error);
+              alert("Failed to submit visit. Please try again.");
+            } finally {
+              // Hide loading screen after fetching location
+              loadingScreen.style.display = "none";
+            }
+          },
+          function (error) {
+            loadingScreen.style.display = "none"; // Hide loading screen on error
+            alert("Location access denied. Please enable location services.");
           }
-
-          await visitModal.classList.add("hidden");
-          await fetchVisits(todayIST);
-        } catch (error) {
-          console.error("Error submitting visit:", error);
-          alert("Failed to submit visit. Please try again.");
-        }
-      },
-      function (error) {
-        alert("Location access denied. Please enable location services.");
+        );
+      } else {
+        alert("Geolocation is not supported in this browser.");
       }
-    );
-  } else {
-    alert("Geolocation is not supported in this browser.");
-  }
-}
-
-
-async function downloadFile(username, filename) {
-    try {
-        const response = await fetch(`/download/${username}/${filename}`);
-
-        if (!response.ok) throw new Error("Failed to download file");
-
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    } catch (error) {
-        console.error("Error downloading file:", error);
-        alert("Failed to download file.");
     }
-}
 
 
     // Show a popup if location is blocked
@@ -528,57 +596,71 @@ async function downloadFile(username, filename) {
       submitVisit(); // Retry the process
     }
 
-
-    async function fetchVisits(selectedDate = null) {
-  try {
-    if (!username) {
-      console.error("Username is not set");
-      return;
+    function downloadFile(fileUrl) {
+      const link = document.createElement("a");
+      link.href = fileUrl;
+      link.download = fileUrl.split('/').pop(); // Extracts filename from URL
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
 
-    const date = selectedDate || new Date().toISOString().split("T")[0]; // Default to today's date
+    async function fetchVisits(selectedDate = null) {
+      try {
+        if (!username) {
+          console.error("Username is not set");
+          return;
+        }
 
-    const visitResponse = await fetch(`/get-visits?username=${username}&date=${date}`, {
-      headers: { "Authorization": `Bearer ${localStorage.getItem("authToken")}` }
-    });
+        const date = selectedDate || new Date().toISOString().split("T")[0]; // Default to today's date
 
-    const visits = await visitResponse.json();
-    const visitList = document.getElementById("visitList");
-    visitList.innerHTML = ""; // Clear previous data
+        const visitResponse = await fetch(`/get-visits?username=${username}&date=${date}`, {
+          headers: { "Authorization": `Bearer ${localStorage.getItem("authToken")}` }
+        });
 
-    visits.forEach((visit) => {
-      const visitDate = new Date(visit.date);
-      const formattedDate = `${visitDate.getDate()}/${visitDate.toLocaleString('en-US', { month: 'short' })}/${visitDate.getFullYear()}`;
-      const formattedTime = visitDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
+        const visits = await visitResponse.json();
+        const visitList = document.getElementById("visitList");
+        visitList.innerHTML = ""; // Clear previous data
 
-      const mapLink = `https://www.google.com/maps?q=${visit.latitude},${visit.longitude}`;
-      
-      const downloadButton = visit.filename
-        ? `<button onclick="downloadFile('${username}', '${visit.filename}')" style="background-color: blue; color: white; padding: 5px 10px; border: none; cursor: pointer; border-radius: 5px;">Download File</button>`
-        : `<p style="color: red;">No file available</p>`;
+        visits.forEach((visit) => {
+          const visitDate = new Date(visit.date);
+          const formattedDate = `${visitDate.getDate()}/${visitDate.toLocaleString('en-US', { month: 'short' })}/${visitDate.getFullYear()}`;
+          const formattedTime = visitDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
 
-      const card = document.createElement("div");
-      card.className = "visit-card";
-      card.innerHTML = `
-        <h3 style="text-shadow: none;">${visit.customer}</h3>
-        <p><strong>Mobile:</strong> ${visit.mobile || "N/A"}</p>
-        <p><strong>Address:</strong> ${visit.address}</p>
-        <p><strong>Place:</strong> ${visit.place}</p>
-        <p><strong>Comments:</strong> ${visit.comments || "No comments"}</p>
-        <p><strong>Date:</strong> ${formattedDate}, ${formattedTime}</p>
-        <p><strong>Location:</strong> <a href="${mapLink}" target="_blank" style="color: blue; text-decoration: underline;">View on Map</a></p>
-        ${downloadButton}
-      `;
+          const mapLink = `https://www.google.com/maps?q=${visit.latitude},${visit.longitude}`;
 
-      card.style.opacity = 0;
-      visitList.appendChild(card);
+          const attachment = visit.fileUrl
+        ? `<p style="display: flex;"><strong>📎 Attachments:</strong> 
+            <a href="${visit.fileUrl}" download target="_blank" >
+                ${visit.fileUrl.split('/').pop()}
+            </a>
+          </p>`
+        : `<p><strong>📎 Attachments:</strong> <span style="color: red;">No file available</span></p>`;
 
-      setTimeout(() => { card.style.opacity = 1; }, 200);
-    });
-  } catch (error) {
-    console.error("Error fetching visits:", error);
-  }
-}
+          const card = document.createElement("div");
+          card.className = "visit-card";
+          card.innerHTML = `
+  <h3>${visit.customer}</h3>
+  <p><strong>📞 Mobile:</strong> ${visit.mobile || "N/A"}</p>
+  <p><strong>🏠 Address:</strong> ${visit.address}</p>
+  <p><strong>📍 Place:</strong> ${visit.place}</p>
+  <p><strong>📝 Comments:</strong> ${visit.comments || "No comments"}</p>
+  <p><strong>📅 Date:</strong> ${formattedDate}, ${formattedTime}</p>
+  <p style="display: flex;"><strong>📍 Location:</strong> 
+    <a href="${mapLink}" target="_blank">
+      <img src="https://img.icons8.com/fluency/20/000000/maps.png"/> View on Map
+    </a>
+  </p>
+  ${attachment}
+`;
+          visitList.appendChild(card);
+
+          setTimeout(() => { card.style.opacity = 1; }, 200);
+        });
+      } catch (error) {
+        console.error("Error fetching visits:", error);
+      }
+    }
 
 
 

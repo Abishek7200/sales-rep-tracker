@@ -1,19 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | WFJ Presenter</title>
     <link rel="stylesheet" href="css/login.css">
 </head>
+
 <body>
     <div id="notification" class="notification hidden"></div>
     <div class="form-container">
+        <div class="logo"><img src="./assets/logo.png" alt="Logo" style="width: 60%;"></div>
         <h1>Login</h1>
         <form id="loginForm">
             <input type="tel" id="mobileNumber" placeholder="Mobile Number" required pattern="[0-9]{10}">
             <div style="position: relative; display: flex; align-items: center;">
-                <input type="password" id="password" placeholder="Password" required style="width: 100%; padding-right: 35px;">
+                <input type="password" id="password" placeholder="Password" required
+                    style="width: 100%; padding-right: 35px;">
                 <span id="togglePassword" style="
                     position: absolute; 
                     right: 10px; 
@@ -44,7 +48,7 @@
 
     <script>
 
-function showNotification(message, success) {
+        function showNotification(message, success) {
             const notification = document.getElementById('notification');
             notification.textContent = message;
             notification.style.backgroundColor = success ? '#28a745' : '#dc3545';
@@ -54,7 +58,7 @@ function showNotification(message, success) {
                 notification.style.display = 'none';
             }, 4000);
         }
-        
+
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -131,4 +135,5 @@ function showNotification(message, success) {
         });
     </script>
 </body>
+
 </html>
