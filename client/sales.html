@@ -486,7 +486,7 @@
 
     document.getElementById('addEntryBtn').addEventListener('click', () => {
       document.getElementById('visitModal').classList.remove('hidden');
-      document.body.style.overflow = 'hidden';
+      // document.body.style.overflow = 'hidden';
       document.getElementById('visitDate').style.display = 'none'
     });
 
@@ -597,13 +597,23 @@
     }
 
     function downloadFile(fileUrl) {
+  fetch(fileUrl)
+    .then(response => {
+      if (!response.ok) throw new Error("File not found");
+      return response.blob();
+    })
+    .then(blob => {
       const link = document.createElement("a");
-      link.href = fileUrl;
-      link.download = fileUrl.split('/').pop(); // Extracts filename from URL
+      link.href = URL.createObjectURL(blob);
+      link.download = fileUrl.split('/').pop(); // Extract filename
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    }
+      URL.revokeObjectURL(link.href);
+    })
+    .catch(error => console.error("Download failed:", error));
+}
+
 
     async function fetchVisits(selectedDate = null) {
       try {
@@ -630,12 +640,12 @@
           const mapLink = `https://www.google.com/maps?q=${visit.latitude},${visit.longitude}`;
 
           const attachment = visit.fileUrl
-        ? `<p style="display: flex;"><strong>📎 Attachments:</strong> 
-            <a href="${visit.fileUrl}" download target="_blank" >
-                ${visit.fileUrl.split('/').pop()}
-            </a>
-          </p>`
-        : `<p><strong>📎 Attachments:</strong> <span style="color: red;">No file available</span></p>`;
+  ? `<p><strong>📎 Attachments:</strong> 
+       <a href="javascript:void(0)" onclick="downloadFile('${visit.fileUrl}')">
+         ${visit.fileUrl.split('/').pop()}
+       </a>
+     </p>`
+  : `<p><strong>📎 Attachments:</strong> <span style="color: red;">No file available</span></p>`;
 
           const card = document.createElement("div");
           card.className = "visit-card";
