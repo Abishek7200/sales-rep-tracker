@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Sales Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            width: -webkit-fill-available;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .filters select, .filters input {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 25%;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            overflow: overlay;
+            display: block;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background: #007bff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Admin Sales Tracker</h1>
+        
+        <div class="filters">
+            <select id="userFilter" style="height: fit-content;align-self: center;width: 60%;"></select>
+            <input type="date" id="dateFilter">
+            <input type="text" style="width: -webkit-fill-available;" id="searchInput" placeholder="Search (Customer, Mobile, Address, Place, Comments)">
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Customer</th>
+                    <th>Mobile</th>
+                    <th>Address</th>
+                    <th>Place</th>
+                    <th>Comments</th>
+                    <th>Location</th>
+                    <th>File</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody id="salesData"></tbody>
+        </table>
+    </div>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            fetchUsers();
+            document.getElementById("userFilter").addEventListener("change", filterData);
+            document.getElementById("dateFilter").addEventListener("input", filterData);
+            document.getElementById("searchInput").addEventListener("input", filterData);
+        });
+
+        function fetchUsers() {
+            fetch('/sales-data')
+                .then(response => response.json())
+                .then(data => {
+                    const userFilter = document.getElementById("userFilter");
+                    userFilter.innerHTML = `<option value="">Select User</option>`;
+
+                    let uniqueUsers = new Set();
+                    data.forEach(user => uniqueUsers.add(user.name));
+
+                    uniqueUsers.forEach(user => {
+                        const option = document.createElement("option");
+                        option.value = user;
+                        option.textContent = user;
+                        userFilter.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error fetching users:', error));
+        }
+
+        function filterData() {
+    const selectedUser = document.getElementById("userFilter").value;
+    const selectedDate = document.getElementById("dateFilter").value;
+    const searchQuery = document.getElementById("searchInput").value.toLowerCase();
+
+    fetch('/sales-data')
+        .then(response => response.json())
+        .then(data => {
+            let salesData = [];
+            data.forEach(user => {
+                if (user.name === selectedUser && user.salesVisits) {
+                    user.salesVisits.forEach(visit => {
+                        let visitDate = new Date(visit.date).toISOString().split("T")[0]; // Format date to YYYY-MM-DD
+
+                        // Extract latitude and longitude properly
+                        let latitude = visit.latitude ? (visit.latitude.$numberDouble || visit.latitude) : null;
+                        let longitude = visit.longitude ? (visit.longitude.$numberDouble || visit.longitude) : null;
+
+                        // Check if date matches filter
+                        if (selectedDate && visitDate !== selectedDate) return;
+
+                        salesData.push({
+                            customer: visit.customer,
+                            mobile: visit.mobile,
+                            address: visit.address,
+                            place: visit.place,
+                            comments: visit.comments,
+                            latitude: latitude,
+                            longitude: longitude,
+                            fileUrl: visit.file ? `/files/${user.name}/${visit.file}` : null,
+                            date: visit.date
+                        });
+                    });
+                }
+            });
+
+            // Apply search filter (Customer, Mobile, Address, Place, Comments)
+            salesData = salesData.filter(entry =>
+                entry.customer.toLowerCase().includes(searchQuery) ||
+                entry.mobile.toLowerCase().includes(searchQuery) ||
+                entry.address.toLowerCase().includes(searchQuery) ||
+                entry.place.toLowerCase().includes(searchQuery) ||
+                entry.comments.toLowerCase().includes(searchQuery)
+            );
+
+            displayData(salesData);
+        })
+        .catch(error => console.error('Error fetching data:', error));
+}
+
+
+function displayData(data) {
+    const tableBody = document.getElementById("salesData");
+    tableBody.innerHTML = "";
+    data.forEach(entry => {
+        const googleMapsLink = (entry.latitude && entry.longitude) 
+            ? `<a href="https://www.google.com/maps?q=${entry.latitude},${entry.longitude}" target="_blank">View on Map</a>` 
+            : "No Location";
+        
+        const row = `<tr>
+            <td>${entry.customer}</td>
+            <td>${entry.mobile}</td>
+            <td>${entry.address}</td>
+            <td>${entry.place}</td>
+            <td>${entry.comments}</td>
+            <td>${googleMapsLink}</td>
+            <td>${entry.fileUrl ? `<a href="${entry.fileUrl}" target="_blank">View File</a>` : "No File"}</td>
+            <td>${new Date(entry.date).toLocaleDateString()}</td>
+        </tr>`;
+        tableBody.innerHTML += row;
+    });
+}
+
+    </script>
+</body>
+</html>

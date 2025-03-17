@@ -96,6 +96,10 @@ app.get("/sales", (req, res) => {
     res.sendFile(path.join(__dirname, "client", "sales.html"));
 });
 
+app.get("/admin", (req, res) => {
+    res.sendFile(path.join(__dirname, "client", "adminsalestracker.html"));
+});
+
 
 // Function to get the local network IP address
 function getLocalIP() {
@@ -165,6 +169,7 @@ app.post("/signup", async (req, res) => {
         await usersCollection.insertOne(newUser);
 
         res.json({ message: "User registered successfully" });
+        await sendWelcomeEmail(email, name)
     } catch (error) {
         console.error("Error registering user:", error);
         res.status(500).json({ error: "Internal Server Error" });
@@ -281,6 +286,51 @@ app.post("/sales-visit", upload.single("file"), fetchUsername, async (req, res) 
     } catch (error) {
         console.error("Error:", error);
         res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+// API to fetch all users and sales visits
+app.get('/sales-data', async (req, res) => {
+    try {
+        const database = await db.connectDB();
+        const usersCollection = database.collection("users");
+
+        let users = await usersCollection.find({}).toArray(); // Convert cursor to array
+        res.json(users);
+    } catch (error) {
+        console.error("Error fetching data:", error);
+        res.status(500).json({ message: "Server Error" });
+    }
+});
+
+// API to filter sales visits by date and user
+app.get('/filter-sales', async (req, res) => {
+    try {
+        const { user, date } = req.query;
+        let query = {};
+
+        if (user) {
+            query["name"] = { $regex: user, $options: "i" }; // Case-insensitive user search
+        }
+
+        let users = await User.find(query);
+
+        if (date) {
+            const filteredUsers = users.map(user => ({
+                ...user.toObject(),
+                salesVisits: user.salesVisits.filter(visit => {
+                    const visitDate = new Date(parseInt(visit.date.$date.$numberLong)).toISOString().split('T')[0];
+                    return visitDate === date;
+                })
+            }));
+
+            return res.json(filteredUsers);
+        }
+
+        res.json(users);
+    } catch (error) {
+        console.error("Error filtering data:", error);
+        res.status(500).json({ message: "Server Error" });
     }
 });
 
@@ -654,7 +704,7 @@ const transporter = nodemailer.createTransport({
 
 // Send welcome email function
 function sendWelcomeEmail(userEmail, username) {
-    const appUrl = 'https://wfjpresenter.onrender.com';
+    const appUrl = 'https://salesrep.onrender.com';
 
     const mailOptions = {
         from: 'vabishekkumar@gmail.com',

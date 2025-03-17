@@ -103,6 +103,7 @@ button:hover {
   display: none;
   color: #fff;
   font-weight: bold;
+  z-index: 1;
 }
 
 .notification.visible {
