@@ -24,7 +24,7 @@
             text-align: center;
         }
         .filters {
-            display: flex;
+            display: block;
             gap: 10px;
             margin-bottom: 20px;
         }
@@ -33,7 +33,7 @@
             font-size: 16px;
             border: 1px solid #ccc;
             border-radius: 5px;
-            width: 25%;
+            width: 40%;
         }
         table {
             width: 100%;
@@ -58,7 +58,7 @@
         <h1>Admin Sales Tracker</h1>
         
         <div class="filters">
-            <select id="userFilter" style="height: fit-content;align-self: center;width: 60%;"></select>
+            <select id="userFilter" style="height: fit-content;align-self: center;width: 50%;"></select>
             <input type="date" id="dateFilter">
             <input type="text" style="width: -webkit-fill-available;" id="searchInput" placeholder="Search (Customer, Mobile, Address, Place, Comments)">
         </div>
